@@ -5,8 +5,10 @@ from models.ticket import Ticket
 
 
 async def creat_ticket(ticket: Ticket):
-    query = tickets.insert().values(id_student=ticket.id_student, date=ticket.date, day=ticket.day, meal=ticket.meal, status=ticket.status, reason=ticket.reason,
-                                    text=ticket.text, is_permanent=ticket.is_permanent)
+    query = tickets.insert().values(student_id=ticket.student_id, week_id=ticket.week_id, meal_id=ticket.meal_id,
+                                    status_id=ticket.status_id, justification_id=ticket.justification_id,
+                                    solicitation_day=ticket.solicitation_day, use_day=ticket.use_day,
+                                    payment_day=ticket.payment_day, text=ticket.text, is_permanent=ticket.is_permanent)
 
     return await db_ticket.execute(query)
 
@@ -17,7 +19,7 @@ async def get_ticket(ticket_id: int):
 
 
 async def get_all_tickets(student_id: int):
-    query = select([tickets]).where(tickets.c.id_student == student_id)
+    query = select([tickets]).where(tickets.c.student_id == student_id)
     return await db_ticket.fetch_all(query)
 
 

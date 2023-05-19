@@ -3,5 +3,6 @@ from pydantic import BaseModel
 
 class Student(BaseModel):
     name: str
-    email: str
+    matricula: str
     password: str
+    type: str

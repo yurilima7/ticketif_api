@@ -12,28 +12,64 @@ students = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("name", String(150)),
-    Column("email", String(100)),
+    Column("matricula", String(100)),
     Column("password", String(100)),
+    Column("type", String(100))
 )
 
-days = Table(
-    "days",
+permanent = Table(
+    "permanent",
     metadata,
-    Column("id_student", Integer, ForeignKey("students.id")),
-    Column("id_ticket", Integer, ForeignKey("tickets.id")),
-    Column("day", String),
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("student_id", Integer, ForeignKey("students.id")),
+    Column("meal_id", Integer, ForeignKey("meal.id")),
+    Column("week_id", Integer, ForeignKey("week.id")),
 )
+
+meal = Table(
+    "meal",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100))
+)
+
+
+week = Table(
+    "week",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100))
+)
+
+
+status = Table(
+    "status",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100))
+)
+
+
+justification = Table(
+    "justification",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100))
+)
+
 
 tickets = Table(
     "tickets",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("id_student", Integer, ForeignKey("students.id")),
-    Column("date", String(100)),
-    Column("day", String(100)),
-    Column("meal", String(100)),
-    Column("status", String(100)),
-    Column("reason", String(100)),
+    Column("student_id", Integer, ForeignKey("students.id")),
+    Column("week_id", Integer, ForeignKey("week.id")),
+    Column("meal_id", Integer, ForeignKey("meal.id")),
+    Column("status_id", Integer, ForeignKey("status.id")),
+    Column("justification_id", Integer, ForeignKey("justification.id")),
+    Column("solicitation_day", String(100)),
+    Column("use_day", String(100)),
+    Column("payment_day", String(100)),
     Column("text", String(200)),
     Column("is_permanent", Integer),
 )

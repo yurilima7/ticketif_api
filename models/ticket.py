@@ -2,11 +2,13 @@ from pydantic import BaseModel
 
 
 class Ticket(BaseModel):
-    id_student: int
-    date: str
-    day: str
-    meal: str
-    status: str
-    reason: str
+    student_id: int
+    week_id: int
+    meal_id: int
+    status_id: int
+    justification_id: int
+    solicitation_day: str
+    use_day: str
+    payment_day: str
     text: str
     is_permanent: int

@@ -16,20 +16,21 @@ pwd_context = CryptContext(schemes=["bcrypt"])
 security = HTTPBearer()
 
 
-async def create_account(name: str, email: str, password: str):
-    user = await get_auth_student(email)
+async def create_account(name: str, matricula: str, password: str, type_student: str):
+    user = await get_auth_student(matricula)
     if user:
         raise HTTPException(status_code=400, detail="Estudante já existe")
 
     await create_student(Student(
         name=name,
-        email=email,
+        matricula=matricula,
         password=password,
+        type=type_student,
     ))
 
 
-async def authenticate(email: str, password: str):
-    student = await get_auth_student(email)
+async def authenticate(matricula: str, password: str):
+    student = await get_auth_student(matricula)
     if student and pwd_context.verify(password, student["password"]):
         return student
 
@@ -40,12 +41,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         token = credentials.credentials
         payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
+        matricula = payload.get("sub")
 
-        if email is None:
+        if matricula is None:
             raise HTTPException(status_code=401, detail="Token inválido")
 
-        student = await get_auth_student(email)
+        student = await get_auth_student(matricula)
 
         if student is None:
             raise HTTPException(status_code=401, detail="Estudante não encontrado")
@@ -55,24 +56,24 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Token inválido")
 
 
-async def create_access_token(email: str):
+async def create_access_token(matricula: str):
     access_token_expires = timedelta(minutes=60)
     return encode(
         {
             "exp": datetime.utcnow() + access_token_expires,
-            "sub": email,
+            "sub": matricula,
         },
         SECRET_KEY,
         algorithm=ALGORITHM,
     )
 
 
-async def create_refresh_token(email: str):
+async def create_refresh_token(matricula: str):
     refresh_token_expires = timedelta(days=7)
     return encode(
         {
             "exp": datetime.utcnow() + refresh_token_expires,
-            "sub": email,
+            "sub": matricula,
         },
         SECRET_KEY,
         algorithm=ALGORITHM,
