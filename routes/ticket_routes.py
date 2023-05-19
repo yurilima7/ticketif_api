@@ -17,7 +17,7 @@ async def request_ticket(ticket_info: Ticket, current_user: dict = Depends(get_c
 
 
 @ticket_router.get("/ticket/{student_id}")
-async def client(student_id: int, current_user: dict = Depends(get_current_user)):
+async def all_tickets(student_id: int, current_user: dict = Depends(get_current_user)):
     tickets = await get_all_tickets(student_id)
     if tickets is None:
         raise HTTPException(status_code=404, detail="Tickets not found")
@@ -38,7 +38,7 @@ async def update_patch_ticket(ticket_id: int, ticket_registered: dict, current_u
 
 
 @ticket_router.delete("/ticket/{ticket_id}")
-async def delete_client_existing(ticket_id: int, current_user: dict = Depends(get_current_user)):
+async def delete_ticket_existing(ticket_id: int, current_user: dict = Depends(get_current_user)):
     ticket_mod = await delete_ticket(ticket_id)
     if ticket_mod is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
