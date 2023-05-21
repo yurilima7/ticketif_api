@@ -23,6 +23,11 @@ async def get_all_tickets(student_id: int):
     return await db_ticket.fetch_all(query)
 
 
+async def get_all_tickets_monthly(month: str):
+    query = select([tickets]).where(tickets.c.payment_day.like(f'{month}-%'))
+    return await db_ticket.fetch_all(query)
+
+
 async def patch_ticket(ticket_id: int, updated_fields: dict):
     query = tickets.update().where(tickets.c.id == ticket_id).values(**updated_fields)
     return await db_ticket.execute(query)

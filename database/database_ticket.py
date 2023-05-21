@@ -1,5 +1,5 @@
 import databases as databases
-from sqlalchemy import create_engine, MetaData, Column, Integer, String, Table, ARRAY, ForeignKey
+from sqlalchemy import create_engine, MetaData, Column, Integer, String, Table, ForeignKey
 
 DATABASE_URL = "sqlite:///database/database_ticket_if.db"
 
