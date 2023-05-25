@@ -28,9 +28,10 @@ async def authorization(ticket_id: int, ticket_registered: dict, current_user: d
 # Rota que retorna todos os tickets pagos em um determinado mês
 @cae_router.get("/tickets-monthly")
 async def tickets_monthly(month: str = Query(..., regex=r"\d{4}-\d{2}"),
+                          search_filter: str = Query(...),
                           current_user: dict = Depends(get_current_user)):
 
-    tickets = await get_all_tickets_monthly(month)
+    tickets = await get_all_tickets_monthly(month, search_filter)
     if tickets is None:
         raise HTTPException(status_code=404, detail="Tickets not found")
 

@@ -1,6 +1,6 @@
-from sqlalchemy import select
+from sqlalchemy import select, join, and_
 
-from database.database_ticket import tickets, db_ticket
+from database.database_ticket import tickets, db_ticket, status, justification, meal, students
 from models.ticket import Ticket
 
 
@@ -19,12 +19,33 @@ async def get_ticket(ticket_id: int):
 
 
 async def get_all_tickets(student_id: int):
-    query = select([tickets]).where(tickets.c.student_id == student_id)
+    join_main = tickets.join(status, tickets.c.status_id == status.c.id)\
+        .join(justification, tickets.c.justification_id == justification.c.id)\
+        .join(meal, tickets.c.meal_id == meal.c.id)
+
+    query = select([
+        tickets,
+        status.c.description.label('status_description'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description')
+    ]).select_from(join_main).where(tickets.c.student_id == student_id)
+
     return await db_ticket.fetch_all(query)
 
 
-async def get_all_tickets_monthly(month: str):
-    query = select([tickets]).where(tickets.c.payment_day.like(f'{month}-%'))
+async def get_all_tickets_monthly(month: str, search_filter: str):
+    join_main = tickets.join(status, tickets.c.status_id == status.c.id) \
+        .join(justification, tickets.c.justification_id == justification.c.id) \
+        .join(meal, tickets.c.meal_id == meal.c.id)\
+        .join(students, tickets.c.student_id == students.c.id)
+
+    query = select([
+        tickets,
+        status.c.description.label('status_description'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description'),
+        students.c.type,
+    ]).select_from(join_main).where(and_(tickets.c.payment_day.like(f'{month}-%'), students.c.type == search_filter))
     return await db_ticket.fetch_all(query)
 
 
