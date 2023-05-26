@@ -3,7 +3,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from auth.auth import get_current_user
 from models.ticket import Ticket
 from repositories.permanent_day_repository import get_days
-from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets
+from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
+    creat_permanent_ticket
 
 ticket_router = APIRouter()
 
@@ -20,12 +21,13 @@ async def request_ticket(ticket_info: Ticket, current_user: dict = Depends(get_c
 @ticket_router.get("/ticket/{student_id}")
 async def all_tickets(student_id: int, current_user: dict = Depends(get_current_user)):
     tickets = await get_all_tickets(student_id)
+    # tickets = await creat_permanent_ticket()
     if tickets is None:
         raise HTTPException(status_code=404, detail="Tickets not found")
     return tickets
 
 
-# Rota responsável por cancelar o ticket do estudante
+# Rota responsável por confirmar presença ou cancelar o ticket do estudante
 @ticket_router.patch("/ticket/{ticket_id}")
 async def status_modification(ticket_id: int, ticket_registered: dict, current_user: dict = Depends(get_current_user)):
     ticket_mod = await patch_ticket(ticket_id, ticket_registered)

@@ -1,7 +1,13 @@
 from sqlalchemy import select, join, and_
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students
+from models.permanent import Permanent
 from models.ticket import Ticket
+import schedule
+import time
+import threading
+
+from repositories.permanent_day_repository import creat_permanent_day
 
 
 async def creat_ticket(ticket: Ticket):
@@ -57,3 +63,45 @@ async def patch_ticket(ticket_id: int, updated_fields: dict):
 async def delete_ticket(ticket_id: int):
     query = tickets.delete().where(tickets.c.id == ticket_id)
     return await db_ticket.execute(query)
+
+
+async def creat_permanent_ticket():
+    query = select([tickets]).where(tickets.c.is_permanent == 1)
+
+    all_tickets = await db_ticket.fetch_all(query)
+
+    for ticket in all_tickets:
+        await creat_ticket(Ticket(
+            student_id=ticket["student_id"],
+            week_id=ticket["week_id"],
+            meal_id=ticket["meal_id"],
+            status_id=2,
+            justification_id=ticket["justification_id"],
+            solicitation_day=ticket["solicitation_day"],
+            use_day=ticket["use_day"],
+            payment_day="",
+            text=ticket["text"],
+            is_permanent=ticket["is_permanent"],
+        ))
+        await creat_permanent_day(
+            Permanent(student_id=ticket["student_id"], week_id=ticket["week_id"],
+                      meal_id=ticket["meal_id"]))
+
+        all_tickets = await db_ticket.fetch_all(query)
+
+    return all_tickets
+
+
+def execute_creat_permanent():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+# Função para agendar a rotina diária
+def schedule_routine():
+    schedule.every().day.at("00:00").do(creat_permanent_ticket)
+
+
+t = threading.Thread(target=execute_creat_permanent)
+t.start()
