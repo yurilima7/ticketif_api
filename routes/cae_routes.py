@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from auth.auth import get_current_user
 from models.permanent import Permanent
 from repositories.permanent_day_repository import creat_permanent_day
-from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, schedule_routine
+from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly
 
 cae_router = APIRouter()
 
@@ -38,8 +38,8 @@ async def tickets_monthly(month: str = Query(..., regex=r"\d{4}-\d{2}"),
     return tickets
 
 
-# Rota para iniciar o agendamento da rotina
-@cae_router.get("/start-scheduling")
-async def start_scheduling():
-    schedule_routine()
-    return {"message": "Rotina agendada para executar todos os dias às 00:00"}
+# # Rota para iniciar o agendamento da rotina
+# @cae_router.get("/start-scheduling")
+# async def start_scheduling():
+#     schedule_routine()
+#     return {"message": "Rotina agendada para executar todos os dias às 00:00"}

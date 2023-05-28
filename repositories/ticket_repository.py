@@ -3,9 +3,8 @@ from sqlalchemy import select, join, and_
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students
 from models.permanent import Permanent
 from models.ticket import Ticket
-import schedule
-import time
-import threading
+from datetime import date
+from babel.dates import format_date, format_datetime, format_time
 
 from repositories.permanent_day_repository import creat_permanent_day
 
@@ -66,7 +65,12 @@ async def delete_ticket(ticket_id: int):
 
 
 async def creat_permanent_ticket():
-    query = select([tickets]).where(tickets.c.is_permanent == 1)
+    today = date.today()
+    day_name = format_date(today, "EEEE", locale="pt_BR")
+    formatted_day_name = day_name.capitalize()
+    formatted_day_name_title = formatted_day_name.title()
+
+    query = select([tickets]).where(and_(tickets.c.is_permanent == 1, tickets.c.use_day == formatted_day_name_title))
 
     all_tickets = await db_ticket.fetch_all(query)
 
@@ -91,17 +95,3 @@ async def creat_permanent_ticket():
 
     return all_tickets
 
-
-def execute_creat_permanent():
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-
-# Função para agendar a rotina diária
-def schedule_routine():
-    schedule.every().day.at("00:00").do(creat_permanent_ticket)
-
-
-t = threading.Thread(target=execute_creat_permanent)
-t.start()
