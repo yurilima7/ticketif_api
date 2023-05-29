@@ -30,16 +30,6 @@ app.include_router(restaurant_router)
 app.include_router(cae_router)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-
 # Função de execução da rotina de criação dos tickets permanentes
 def execute_schedule_routine():
     while True:
