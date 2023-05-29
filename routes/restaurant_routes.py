@@ -10,10 +10,13 @@ restaurant_router = APIRouter()
 @restaurant_router.patch("/ticket-status/{ticket_id}")
 async def ticket_status_modification(ticket_id: int, ticket_registered: dict,
                                      current_user: dict = Depends(get_current_user)):
-    ticket_mod = await patch_ticket(ticket_id, ticket_registered)
-    if ticket_mod is None:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+    if current_user["type"] == 'Restaurant':
+        ticket_mod = await patch_ticket(ticket_id, ticket_registered)
+        if ticket_mod is None:
+            raise HTTPException(status_code=404, detail="Ticket not found")
 
-    ticket_registered_mod = await get_ticket(ticket_id)
+        ticket_registered_mod = await get_ticket(ticket_id)
 
-    return ticket_registered_mod
+        return ticket_registered_mod
+    else:
+        raise HTTPException(status_code=404, detail="Unauthorized")

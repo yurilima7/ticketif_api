@@ -19,11 +19,14 @@ async def request_ticket(ticket_info: Ticket, current_user: dict = Depends(get_c
 # Rota que retorna todos o histórico de tickets do estudante
 @ticket_router.get("/ticket/{student_id}")
 async def all_tickets(student_id: int, current_user: dict = Depends(get_current_user)):
-    tickets = await get_all_tickets(student_id)
-    # tickets = await creat_permanent_ticket()
-    if tickets is None:
-        raise HTTPException(status_code=404, detail="Tickets not found")
-    return tickets
+    if current_user["id"] == student_id:
+        tickets = await get_all_tickets(student_id)
+
+        if tickets is None:
+            raise HTTPException(status_code=404, detail="Tickets not found")
+        return tickets
+    else:
+        raise HTTPException(status_code=404, detail="Unauthorized")
 
 
 # Rota responsável por confirmar presença ou cancelar o ticket do estudante
