@@ -20,7 +20,8 @@ async def authorization(ticket_id: int, ticket_registered: dict, current_user: d
     if ticket_registered_mod["is_permanent"] == 1 and ticket_registered_mod["status_id"] == 2:
         await creat_permanent_day(
             Permanent(student_id=ticket_registered_mod["student_id"], week_id=ticket_registered_mod["week_id"],
-                      meal_id=ticket_registered_mod["meal_id"]))
+                      meal_id=ticket_registered_mod["meal_id"],
+                      justification_id=ticket_registered_mod["justification_id"]))
 
     return ticket_registered_mod
 
@@ -30,16 +31,8 @@ async def authorization(ticket_id: int, ticket_registered: dict, current_user: d
 async def tickets_monthly(month: str = Query(..., regex=r"\d{4}-\d{2}"),
                           search_filter: str = Query(...),
                           current_user: dict = Depends(get_current_user)):
-
     tickets = await get_all_tickets_monthly(month, search_filter)
     if tickets is None:
         raise HTTPException(status_code=404, detail="Tickets not found")
 
     return tickets
-
-
-# # Rota para iniciar o agendamento da rotina
-# @cae_router.get("/start-scheduling")
-# async def start_scheduling():
-#     schedule_routine()
-#     return {"message": "Rotina agendada para executar todos os dias às 00:00"}

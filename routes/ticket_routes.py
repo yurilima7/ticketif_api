@@ -3,8 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from auth.auth import get_current_user
 from models.ticket import Ticket
 from repositories.permanent_day_repository import get_days
-from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
-    creat_permanent_ticket
+from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets
 
 ticket_router = APIRouter()
 

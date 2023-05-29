@@ -11,12 +11,12 @@ from routes.restaurant_routes import restaurant_router
 from routes.cae_routes import cae_router
 
 
-# Função para agendar a rotina diária
+# Função para agendar a rotina diária de criação dos tickets permanentes
 def schedule_routine():
     async def run_creat_permanent_ticket():
         await creat_permanent_ticket()
 
-    schedule.every().day.at("00:00").do(lambda: asyncio.run(run_creat_permanent_ticket()))
+    schedule.every().day.at("16:50").do(lambda: asyncio.run(run_creat_permanent_ticket()))
 
 
 schedule_routine()
@@ -40,6 +40,7 @@ async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
 
+# Função de execução da rotina de criação dos tickets permanentes
 def execute_schedule_routine():
     while True:
         schedule.run_pending()
@@ -49,7 +50,6 @@ def execute_schedule_routine():
 t = threading.Thread(target=execute_schedule_routine)
 t.start()
 
-# Inicie o servidor FastAPI
 if __name__ == "__main__":
     import uvicorn
 
