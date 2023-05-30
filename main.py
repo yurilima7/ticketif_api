@@ -16,7 +16,7 @@ def schedule_routine():
     async def run_creat_permanent_ticket():
         await creat_permanent_ticket()
 
-    schedule.every().day.at("16:50").do(lambda: asyncio.run(run_creat_permanent_ticket()))
+    schedule.every().day.at("00:00").do(lambda: asyncio.run(run_creat_permanent_ticket()))
 
 
 schedule_routine()
