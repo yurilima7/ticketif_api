@@ -1,14 +1,18 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from auth.auth import get_current_user
+from repositories.student_repository import get_auth_student
 
 student_router = APIRouter()
 
 
 # Rota responsável por retornar os dados do estudante
-@student_router.get("/me")
-async def get_current_user(current_user: dict = Depends(get_current_user)):
+@student_router.get("/me/{matricula}")
+async def get_current_user(matricula: str):
 
-    if current_user is None:
+    student = await get_auth_student(matricula)
+
+    if student is None:
         raise HTTPException(status_code=404, detail="Student not found")
-    return current_user
+
+    return student
+

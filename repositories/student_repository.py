@@ -1,7 +1,8 @@
 from sqlalchemy import select
 from passlib.context import CryptContext
-from database.database_ticket import students, db_ticket
+from database.database_ticket import students, classes, db_ticket
 from models.student import Student
+import re
 
 pwd_context = CryptContext(schemes=["bcrypt"])
 
@@ -9,6 +10,18 @@ pwd_context = CryptContext(schemes=["bcrypt"])
 async def get_auth_student(matricula: str):
     query = select([students]).where(students.c.matricula == matricula)
     return await db_ticket.fetch_one(query)
+
+
+async def get_type_student(matricula: str):
+    query = select([classes.c.description])
+    results = await db_ticket.fetch_all(query)
+    values = [row[0] for row in results]
+    regular_exp = '|'.join(values)
+    padrao = re.compile(regular_exp)
+    if bool(padrao.search(matricula)):
+        return 'Medio'
+    else:
+        return 'Superior'
 
 
 async def create_student(student: Student):

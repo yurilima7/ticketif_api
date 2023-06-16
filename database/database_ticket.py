@@ -75,4 +75,12 @@ tickets = Table(
     Column("is_permanent", Integer),
 )
 
+classes = Table(
+    "class",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100)),
+    Column("course", String(100))
+)
+
 metadata.create_all(engine)
