@@ -9,6 +9,7 @@ from routes.student_routes import student_router
 from routes.ticket_routes import ticket_router
 from routes.restaurant_routes import restaurant_router
 from routes.cae_routes import cae_router
+from routes.list_tables_routes import list_tables_router
 
 
 # Função para agendar a rotina diária de criação dos tickets permanentes
@@ -28,6 +29,7 @@ app.include_router(ticket_router)
 app.include_router(student_router)
 app.include_router(restaurant_router)
 app.include_router(cae_router)
+app.include_router(list_tables_router)
 
 
 # Função de execução da rotina de criação dos tickets permanentes

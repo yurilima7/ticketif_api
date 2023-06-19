@@ -31,8 +31,7 @@ async def register(name: str = Body(...), matricula: str = Body(...), password: 
 
 @auth_router.post("/login")
 async def login(matricula: str = Body(...), password: str = Body(...)):
-    print(matricula)
-    print(password)
+    print('matricula ' + matricula)
     if matricula:
         if password:
             server = Server("ldap://10.9.10.50:389")
@@ -46,6 +45,8 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
                 if data:
                     student = await get_student(matricula)
                     verification_type = await get_type_student(matricula)
+                    print(student)
+
                     if not student:
                         name = data[0]['givenName'].value
                         user_json = json.dumps(f"OK:{name}")
@@ -54,7 +55,8 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
                         print(data[0])
                         print(student)
                         print(verification_type)
-                        return {"result": 'Login realizado com sucesso!', "matricula": matricula}
+
+                    return {"result": 'Login realizado com sucesso!', "matricula": matricula}
 
                 else:
                     error_json = json.dumps("Falha na autenticação!")
