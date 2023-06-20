@@ -70,6 +70,7 @@ tickets = Table(
     Column("justification_id", Integer, ForeignKey("justification.id")),
     Column("solicitation_day", String(100)),
     Column("use_day", String(100)),
+    Column("use_day_date", String(100)),
     Column("payment_day", String(100)),
     Column("text", String(200)),
     Column("is_permanent", Integer),

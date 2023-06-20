@@ -10,7 +10,7 @@ from babel.dates import format_date
 async def creat_ticket(ticket: Ticket):
     query = tickets.insert().values(student_id=ticket.student_id, week_id=ticket.week_id, meal_id=ticket.meal_id,
                                     status_id=ticket.status_id, justification_id=ticket.justification_id,
-                                    solicitation_day=ticket.solicitation_day, use_day=ticket.use_day,
+                                    solicitation_day=ticket.solicitation_day, use_day=ticket.use_day, use_day_date=ticket.use_day_date,
                                     payment_day=ticket.payment_day, text=ticket.text, is_permanent=ticket.is_permanent)
 
     return await db_ticket.execute(query)
@@ -101,6 +101,7 @@ async def creat_permanent_ticket():
             justification_id=ticket_permanent["justification_meal_id"],
             solicitation_day="",
             use_day=ticket_permanent["week_description"],
+            use_day_date=str(today),
             payment_day="",
             text="",
             is_permanent=1,

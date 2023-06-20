@@ -9,6 +9,7 @@ class Ticket(BaseModel):
     justification_id: int
     solicitation_day: str
     use_day: str
+    use_day_date: str
     payment_day: str
     text: str
     is_permanent: int
