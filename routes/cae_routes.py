@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 
 from models.permanent import Permanent
 from repositories.permanent_day_repository import creat_permanent_day
-from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly
+from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, delete_ticket
 
 cae_router = APIRouter()
 
@@ -21,6 +21,9 @@ async def authorization(ticket_id: int, ticket_registered: dict):
             Permanent(student_id=ticket_registered_mod["student_id"], week_id=ticket_registered_mod["week_id"],
                       meal_id=ticket_registered_mod["meal_id"],
                       justification_id=ticket_registered_mod["justification_id"]))
+
+        if ticket_registered_mod["use_day_date"] == '':
+            await delete_ticket(ticket_id)
 
     return ticket_registered_mod
 
