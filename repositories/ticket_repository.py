@@ -26,10 +26,12 @@ async def get_ticket(ticket_id: int):
 async def get_all_tickets(student_id: int):
     join_main = tickets.join(status, tickets.c.status_id == status.c.id)\
         .join(justification, tickets.c.justification_id == justification.c.id)\
-        .join(meal, tickets.c.meal_id == meal.c.id)
+        .join(meal, tickets.c.meal_id == meal.c.id)\
+        .join(students, students.c.id == tickets.c.student_id)
 
     query = select([
         tickets,
+        students.c.matricula.label('student'),
         status.c.description.label('status_description'),
         justification.c.description.label('justification_description'),
         meal.c.description.label('meal_description')
