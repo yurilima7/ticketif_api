@@ -42,7 +42,7 @@ async def status_modification(ticket_id: int, ticket_registered: dict):
 async def delete_ticket_existing(ticket_id: int):
     ticket_mod = await delete_ticket(ticket_id)
     if ticket_mod is None:
-        raise HTTPException(status_code=404, detail="Ticket not found")
+        raise HTTPException(status_code=404, detail="Ticket not delete")
 
     return {"message": "Ticket deletado com sucesso"}
 

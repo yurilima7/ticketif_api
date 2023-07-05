@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students, permanent, week
 from models.ticket import Ticket
@@ -10,7 +10,8 @@ from babel.dates import format_date
 async def creat_ticket(ticket: Ticket):
     query = tickets.insert().values(student_id=ticket.student_id, week_id=ticket.week_id, meal_id=ticket.meal_id,
                                     status_id=ticket.status_id, justification_id=ticket.justification_id,
-                                    solicitation_day=ticket.solicitation_day, use_day=ticket.use_day, use_day_date=ticket.use_day_date,
+                                    solicitation_day=ticket.solicitation_day, use_day=ticket.use_day,
+                                    use_day_date=ticket.use_day_date,
                                     payment_day=ticket.payment_day, text=ticket.text, is_permanent=ticket.is_permanent)
 
     return await db_ticket.execute(query)
@@ -24,14 +25,15 @@ async def get_ticket(ticket_id: int):
 
 # Função que retorna todos os tickets de um estudante
 async def get_all_tickets(student_id: int):
-    join_main = tickets.join(status, tickets.c.status_id == status.c.id)\
-        .join(justification, tickets.c.justification_id == justification.c.id)\
-        .join(meal, tickets.c.meal_id == meal.c.id)\
-        .join(students, students.c.id == tickets.c.student_id)
+    join_main = tickets.join(status, tickets.c.status_id == status.c.id) \
+        .join(justification, tickets.c.justification_id == justification.c.id) \
+        .join(meal, tickets.c.meal_id == meal.c.id) \
+        .join(students, tickets.c.student_id == students.c.id)
 
     query = select([
         tickets,
         students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
         status.c.description.label('status_description'),
         justification.c.description.label('justification_description'),
         meal.c.description.label('meal_description')
@@ -45,16 +47,57 @@ async def get_all_tickets(student_id: int):
 async def get_all_tickets_monthly(month: str, search_filter: str):
     join_main = tickets.join(status, tickets.c.status_id == status.c.id) \
         .join(justification, tickets.c.justification_id == justification.c.id) \
-        .join(meal, tickets.c.meal_id == meal.c.id)\
+        .join(meal, tickets.c.meal_id == meal.c.id) \
         .join(students, tickets.c.student_id == students.c.id)
 
     query = select([
         tickets,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
         status.c.description.label('status_description'),
         justification.c.description.label('justification_description'),
         meal.c.description.label('meal_description'),
         students.c.type,
     ]).select_from(join_main).where(and_(tickets.c.payment_day.like(f'{month}-%'), students.c.type == search_filter))
+    return await db_ticket.fetch_all(query)
+
+
+# Função relatório por período
+async def period_report(month_initial: str, month_final: str):
+    join_main = tickets.join(status, tickets.c.status_id == status.c.id) \
+        .join(justification, tickets.c.justification_id == justification.c.id) \
+        .join(meal, tickets.c.meal_id == meal.c.id) \
+        .join(students, tickets.c.student_id == students.c.id)
+
+    query = select([
+        tickets,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
+        status.c.description.label('status_description'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description'),
+        students.c.type,
+    ]).select_from(join_main).where(
+        tickets.c.use_day_date.between(month_initial, month_final))
+    return await db_ticket.fetch_all(query)
+
+
+# Função relatório diário
+async def daily_report(daily: str):
+    join_main = tickets.join(status, tickets.c.status_id == status.c.id) \
+        .join(justification, tickets.c.justification_id == justification.c.id) \
+        .join(meal, tickets.c.meal_id == meal.c.id) \
+        .join(students, tickets.c.student_id == students.c.id)
+
+    query = select([
+        tickets,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
+        status.c.description.label('status_description'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description'),
+        students.c.type,
+    ]).select_from(join_main).where(func.DATE(tickets.c.use_day_date) == daily)
     return await db_ticket.fetch_all(query)
 
 
@@ -80,7 +123,7 @@ async def creat_permanent_ticket():
     formatted_day_name = day_name.capitalize()
     formatted_day_name_title = formatted_day_name.title()
 
-    join_main = permanent.join(week, permanent.c.week_id == week.c.id).join(meal, permanent.c.meal_id == meal.c.id)\
+    join_main = permanent.join(week, permanent.c.week_id == week.c.id).join(meal, permanent.c.meal_id == meal.c.id) \
         .join(justification, permanent.c.justification_id == justification.c.id)
 
     query = select([
@@ -108,3 +151,9 @@ async def creat_permanent_ticket():
             text="",
             is_permanent=1,
         ))
+
+
+# Função deletadora de tickets permanentes
+async def delete_permanent_tickets():
+    query = permanent.delete()
+    return await db_ticket.execute(query)
