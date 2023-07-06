@@ -84,4 +84,23 @@ classes = Table(
     Column("course", String(100))
 )
 
+
+loginType = Table(
+    "login_type",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("description", String(100))
+)
+
+
+admUser = Table(
+    "adm_user",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("login_type_id", Integer, ForeignKey("login_type.id")),
+    Column("username", String(100)),
+    Column("password", String(100)),
+)
+
+
 metadata.create_all(engine)

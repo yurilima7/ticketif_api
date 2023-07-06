@@ -1,8 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
-
-from auth.auth import get_current_user
+from fastapi import APIRouter, HTTPException
 from repositories.list_tables_repository import get_meals_and_justifications
-from repositories.ticket_repository import patch_ticket, get_ticket
 
 list_tables_router = APIRouter()
 
