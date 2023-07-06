@@ -7,6 +7,8 @@ from models.adm_user import AdmUser
 pwd_context = CryptContext(schemes=["bcrypt"])
 
 
+# Função responsável pela criação do usuário administrativo
+# RESTAURANTE E CAE
 async def create_adm_user(user: AdmUser):
     hashed_password = pwd_context.hash(user.password)
     query = admUser.insert().values(username=user.username, password=hashed_password, login_type_id=user.login_type_id)
@@ -14,6 +16,7 @@ async def create_adm_user(user: AdmUser):
     await db_ticket.execute(query)
 
 
+# Função que retorna os dados do usuário cadastrado
 async def get_auth_user(username: str):
     query = select([admUser]).where(admUser.c.username == username)
     return await db_ticket.fetch_one(query)

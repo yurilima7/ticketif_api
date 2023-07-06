@@ -10,6 +10,8 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"])
 
 
+# Função responsável por criar uma conta administrativa
+# CAE OU RESTAURANTE
 async def create_account(username: str, login_type_id: int, password: str):
     user = await get_auth_user(username)
     if user:
@@ -22,6 +24,7 @@ async def create_account(username: str, login_type_id: int, password: str):
     ))
 
 
+# Função responsável pela autenticação do usuário administrativo
 async def authenticate(username: str, password: str):
     user = await get_auth_user(username)
     if user and pwd_context.verify(password, user["password"]):

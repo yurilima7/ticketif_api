@@ -18,12 +18,14 @@ async def authorization(ticket_id: int, ticket_registered: dict):
 
     ticket_registered_mod = await get_ticket(ticket_id)
 
+    # Caso seja permanente e o status seja confirmar presença adiciona o dia na tabela de permanentes
     if ticket_registered_mod["is_permanent"] == 1 and ticket_registered_mod["status_id"] == 2:
         await creat_permanent_day(
             Permanent(student_id=ticket_registered_mod["student_id"], week_id=ticket_registered_mod["week_id"],
                       meal_id=ticket_registered_mod["meal_id"],
                       justification_id=ticket_registered_mod["justification_id"]))
 
+        # Deleta os permanentes que não são do dia de hoje
         if ticket_registered_mod["use_day_date"] == '':
             await delete_ticket(ticket_id)
 
@@ -67,7 +69,7 @@ async def day_tickets(daily: str = Query(..., regex=r"\d{4}-\d{2}-\d{2}")):
     return tickets
 
 
-# Rota que deleta todos os tickets da tabela de permanentes
+# Rota que deleta todos os tickets da tabela de permanent
 @cae_router.delete("/tickets-delete")
 async def tickets_delete():
     delete = await delete_permanent_tickets()
@@ -84,12 +86,15 @@ async def request_ticket_cae(ticket_info: Ticket):
     ticket_id = await creat_ticket(ticket_info)
     ticket_registered = await get_ticket(ticket_id)
 
+    # Caso não ocorra problema de registro e seja um ticket permanente
+    # Adiciona o dia na tabela de permanent
     if ticket_registered is not None and ticket_info.is_permanent == 1:
         await creat_permanent_day(
             Permanent(student_id=ticket_info.student_id, week_id=ticket_info.week_id,
                       meal_id=ticket_info.meal_id,
                       justification_id=ticket_info.justification_id))
 
+        # Deleta os permanentes que não são do dia de hoje
         if ticket_info.use_day_date == '':
             await delete_ticket(ticket_id)
 

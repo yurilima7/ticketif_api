@@ -42,6 +42,7 @@ def execute_schedule_routine():
 t = threading.Thread(target=execute_schedule_routine)
 t.start()
 
+# Necessário para rodar a criação de tickets permanentes
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
