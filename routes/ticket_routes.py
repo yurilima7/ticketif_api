@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 
+from models.permanent import Permanent
 from models.ticket import Ticket
-from repositories.permanent_day_repository import get_days
+from repositories.permanent_day_repository import get_days, creat_permanent_day
 from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets
 
 ticket_router = APIRouter()
@@ -12,6 +13,19 @@ ticket_router = APIRouter()
 async def request_ticket(ticket_info: Ticket):
     ticket_id = await creat_ticket(ticket_info)
     ticket_registered = await get_ticket(ticket_id)
+
+    # Verificação necessária para o caso de a CAE ter solicitado o ticket
+    # Adiciona o dia na tabela de permanent
+    if ticket_registered is not None and ticket_info.is_permanent == 1 and ticket_info.status_id == 2:
+        await creat_permanent_day(
+            Permanent(student_id=ticket_info.student_id, week_id=ticket_info.week_id,
+                      meal_id=ticket_info.meal_id,
+                      justification_id=ticket_info.justification_id))
+
+        # Deleta os permanentes que não são do dia de hoje
+        if ticket_info.use_day_date == '':
+            await delete_ticket(ticket_id)
+
     return ticket_registered
 
 

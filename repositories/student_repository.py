@@ -13,6 +13,12 @@ async def get_auth_student(matricula: str):
     return await db_ticket.fetch_one(query)
 
 
+# Função que retorna todos estudantes
+async def get_students():
+    query = select([students])
+    return await db_ticket.fetch_all(query)
+
+
 # Função que retorna o tipo do estudante
 # Ensino Medio ou Ensino Superior
 async def get_type_student(matricula: str):
