@@ -2,7 +2,7 @@ from sqlalchemy import select, and_, func
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students, permanent, week
 from models.ticket import Ticket
-from datetime import date
+from datetime import date, timedelta
 from babel.dates import format_date
 
 
@@ -78,7 +78,7 @@ async def period_report(month_initial: str, month_final: str):
         meal.c.description.label('meal_description'),
         students.c.type,
     ]).select_from(join_main).where(
-        tickets.c.use_day_date.between(month_initial, month_final))
+        (func.DATE(tickets.c.use_day_date) >= month_initial) & (func.DATE(tickets.c.use_day_date) <= month_final))
     return await db_ticket.fetch_all(query)
 
 
