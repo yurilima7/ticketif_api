@@ -114,7 +114,7 @@ async def delete_ticket(ticket_id: int):
 
 
 # Função responsável por criar os tickets permanentes todos os dias às 00h
-async def creat_permanent_ticket():
+async def checks_permanent_authorization(student_id: int):
     # Dia de hoje
     today = date.today()
     # Converção para pt br
@@ -123,29 +123,35 @@ async def creat_permanent_ticket():
     formatted_day_name = day_name.capitalize()
     formatted_day_name_title = formatted_day_name.title()
 
-    join_main = permanent.join(week, permanent.c.week_id == week.c.id).join(meal, permanent.c.meal_id == meal.c.id) \
+    week_query = select([week]).where(week.c.description == formatted_day_name_title)
+    result = await db_ticket.fetch_one(week_query)
+    print(result)
+    week_day_id = result['id']
+    week_description = result['description']
+
+    join_main = permanent.join(meal, permanent.c.meal_id == meal.c.id) \
         .join(justification, permanent.c.justification_id == justification.c.id)
 
     query = select([
         permanent,
-        week.c.description.label('week_description'),
         meal.c.description.label('meal_description'),
-        week.c.id.label('week_day_id'),
         meal.c.id.label('meal_desc_id'),
         justification.c.id.label('justification_meal_id'),
-    ]).select_from(join_main).where(week.c.description == formatted_day_name_title)
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id))
 
-    all_tickets = await db_ticket.fetch_all(query)
+    all_permanents = await db_ticket.fetch_all(query)
 
-    for ticket_permanent in all_tickets:
+    print(all_permanents)
+
+    for permanent_authorization in all_permanents:
         await creat_ticket(Ticket(
-            student_id=ticket_permanent["student_id"],
-            week_id=ticket_permanent["week_day_id"],
-            meal_id=ticket_permanent["meal_desc_id"],
+            student_id=student_id,
+            week_id=week_day_id,
+            meal_id=permanent_authorization["meal_desc_id"],
             status_id=2,
-            justification_id=ticket_permanent["justification_meal_id"],
+            justification_id=permanent_authorization["justification_meal_id"],
             solicitation_day="",
-            use_day=ticket_permanent["week_description"],
+            use_day=week_description,
             use_day_date=str(today),
             payment_day="",
             text="",

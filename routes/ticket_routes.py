@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 
-from models.permanent import Permanent
+from models.permanent import PermanentAuthorization
 from models.ticket import Ticket
 from repositories.permanent_day_repository import get_days, creat_permanent_day
-from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets
+from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
+    checks_permanent_authorization
 
 ticket_router = APIRouter()
 
@@ -14,24 +15,27 @@ async def request_ticket(ticket_info: Ticket):
     ticket_id = await creat_ticket(ticket_info)
     ticket_registered = await get_ticket(ticket_id)
 
-    # Verificação necessária para o caso de a CAE ter solicitado o ticket
-    # Adiciona o dia na tabela de permanent
-    if ticket_registered is not None and ticket_info.is_permanent == 1 and ticket_info.status_id == 2:
-        await creat_permanent_day(
-            Permanent(student_id=ticket_info.student_id, week_id=ticket_info.week_id,
-                      meal_id=ticket_info.meal_id,
-                      justification_id=ticket_info.justification_id))
-
-        # Deleta os permanentes que não são do dia de hoje
-        if ticket_info.use_day_date == '':
-            await delete_ticket(ticket_id)
-
     return ticket_registered
 
 
-# Rota que retorna todos o histórico de tickets do estudante
+# Rota responsável pela criação das autorizações permanentes
+@ticket_router.post("/permanent")
+async def create_permanents_authorizations(days: PermanentAuthorization):
+    for day in days.permanent_days:
+        await creat_permanent_day(day)
+
+        if day.use_day_date != '':
+            ticket_id = await creat_ticket(
+                Ticket(student_id=day.student_id, week_id=day.week_id, meal_id=day.meal_id,
+                       justification_id=day.justification_id, status_id=2, solicitation_day=day.use_day_date,
+                       use_day=day.use_day, text=day.text, is_permanent=1, use_day_date=day.use_day_date,
+                       payment_day=""))
+
+
+# Rota que retorna o histórico de tickets do estudante
 @ticket_router.get("/ticket/{student_id}")
 async def all_tickets(student_id: int):
+    await checks_permanent_authorization(student_id)
     tickets = await get_all_tickets(student_id)
 
     if tickets is None:

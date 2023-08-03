@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 
@@ -6,3 +8,10 @@ class Permanent(BaseModel):
     week_id: int
     meal_id: int
     justification_id: int
+    text: str
+    use_day: str
+    use_day_date: str
+
+
+class PermanentAuthorization(BaseModel):
+    permanent_days: List[Permanent]
