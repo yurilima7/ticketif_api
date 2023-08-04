@@ -25,6 +25,7 @@ permanent = Table(
     Column("meal_id", Integer, ForeignKey("meal.id")),
     Column("week_id", Integer, ForeignKey("week.id")),
     Column("justification_id", Integer, ForeignKey("justification.id")),
+    Column("authorized", Integer)
 )
 
 meal = Table(

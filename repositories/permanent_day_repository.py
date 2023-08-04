@@ -1,13 +1,14 @@
 from sqlalchemy import select
 
-from database.database_ticket import permanent, db_ticket
+from database.database_ticket import permanent, db_ticket, justification, meal, students
 from models.permanent import Permanent
 
 
 # Função que cria um ticket permanente
 async def creat_permanent_day(permanentDay: Permanent):
     query = permanent.insert().values(student_id=permanentDay.student_id, meal_id=permanentDay.meal_id,
-                                      week_id=permanentDay.week_id, justification_id=permanentDay.justification_id)
+                                      week_id=permanentDay.week_id, justification_id=permanentDay.justification_id,
+                                      authorized=permanentDay.authorized)
 
     return await db_ticket.execute(query)
 
@@ -16,3 +17,26 @@ async def creat_permanent_day(permanentDay: Permanent):
 async def get_days(student_id: int):
     query = select([permanent]).where(permanent.c.student_id == student_id)
     return await db_ticket.fetch_all(query)
+
+
+# Função que retorna as autorizações permanentes não aprovadas
+async def get_not_authorized():
+    join_main = permanent.join(justification, permanent.c.justification_id == justification.c.id) \
+        .join(meal, permanent.c.meal_id == meal.c.id) \
+        .join(students, permanent.c.student_id == students.c.id)
+
+    query = select([
+        permanent,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description'),
+        students.c.type,
+    ]).select_from(join_main).where(permanent.c.authorized == 0)
+    return await db_ticket.fetch_all(query)
+
+
+# Função responsável por aprovar ou desaprovar a autorização
+async def patch_authorized(authorized_id: int, updated_fields: dict):
+    query = permanent.update().where(permanent.c.id == authorized_id).values(**updated_fields)
+    return await db_ticket.execute(query)

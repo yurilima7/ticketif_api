@@ -2,7 +2,7 @@ from sqlalchemy import select, and_, func
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students, permanent, week
 from models.ticket import Ticket
-from datetime import date, timedelta
+from datetime import date
 from babel.dates import format_date
 
 
@@ -137,11 +137,13 @@ async def checks_permanent_authorization(student_id: int):
         meal.c.description.label('meal_description'),
         meal.c.id.label('meal_desc_id'),
         justification.c.id.label('justification_meal_id'),
-    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id))
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
+                                         permanent.c.authorized == 1))
 
     all_permanents = await db_ticket.fetch_all(query)
 
     print(all_permanents)
+    print(len(all_permanents))
 
     for permanent_authorization in all_permanents:
         await creat_ticket(Ticket(

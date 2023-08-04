@@ -11,6 +11,7 @@ class Permanent(BaseModel):
     text: str
     use_day: str
     use_day_date: str
+    authorized: int
 
 
 class PermanentAuthorization(BaseModel):

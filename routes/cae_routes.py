@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from models.permanent import Permanent
-from models.ticket import Ticket
-from repositories.permanent_day_repository import creat_permanent_day
+from repositories.permanent_day_repository import creat_permanent_day, get_not_authorized, patch_authorized
 from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, delete_ticket, \
-    delete_permanent_tickets, period_report, daily_report, creat_ticket
+    delete_permanent_tickets, period_report, daily_report
 
 cae_router = APIRouter()
 
@@ -80,22 +79,23 @@ async def tickets_delete():
     return {"message": "Tickets deletados com sucesso"}
 
 
-# Rota responsável por solicitar um Ticket na CAE
-@cae_router.post("/ticket-cae")
-async def request_ticket_cae(ticket_info: Ticket):
-    ticket_id = await creat_ticket(ticket_info)
-    ticket_registered = await get_ticket(ticket_id)
+# Rota que retorna todas as autorizações permanentes não aprovadas
+@cae_router.get("/not-authorized")
+async def permanents_not_authorized():
+    not_authorized = await get_not_authorized()
 
-    # Caso não ocorra problema de registro e seja um ticket permanente
-    # Adiciona o dia na tabela de permanent
-    if ticket_registered is not None and ticket_info.is_permanent == 1:
-        await creat_permanent_day(
-            Permanent(student_id=ticket_info.student_id, week_id=ticket_info.week_id,
-                      meal_id=ticket_info.meal_id,
-                      justification_id=ticket_info.justification_id))
+    if not_authorized is None:
+        raise HTTPException(status_code=404, detail="Not Authorized not found")
 
-        # Deleta os permanentes que não são do dia de hoje
-        if ticket_info.use_day_date == '':
-            await delete_ticket(ticket_id)
+    return not_authorized
 
-    return ticket_registered
+
+# Rota de aprovamento ou desaprovação de permanentes
+@cae_router.patch("/not-authorized/{authorized_id}")
+async def update_not_authorized(authorized_id: int, authorized_registered: dict):
+    result = patch_authorized(authorized_id, authorized_registered)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Authorized not found")
+
+    return result
