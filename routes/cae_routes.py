@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from models.permanent import Permanent
-from repositories.permanent_day_repository import creat_permanent_day, get_not_authorized, patch_authorized
-from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, delete_ticket, \
+from repositories.permanent_day_repository import get_not_authorized, patch_authorized
+from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, \
     delete_permanent_tickets, period_report, daily_report
 
 cae_router = APIRouter()
@@ -16,17 +15,6 @@ async def authorization(ticket_id: int, ticket_registered: dict):
         raise HTTPException(status_code=404, detail="Ticket not found")
 
     ticket_registered_mod = await get_ticket(ticket_id)
-
-    # Caso seja permanente e o status seja confirmar presença adiciona o dia na tabela de permanentes
-    if ticket_registered_mod["is_permanent"] == 1 and ticket_registered_mod["status_id"] == 2:
-        await creat_permanent_day(
-            Permanent(student_id=ticket_registered_mod["student_id"], week_id=ticket_registered_mod["week_id"],
-                      meal_id=ticket_registered_mod["meal_id"],
-                      justification_id=ticket_registered_mod["justification_id"]))
-
-        # Deleta os permanentes que não são do dia de hoje
-        if ticket_registered_mod["use_day_date"] == '':
-            await delete_ticket(ticket_id)
 
     return ticket_registered_mod
 
@@ -93,7 +81,7 @@ async def permanents_not_authorized():
 # Rota de aprovamento ou desaprovação de permanentes
 @cae_router.patch("/not-authorized/{authorized_id}")
 async def update_not_authorized(authorized_id: int, authorized_registered: dict):
-    result = patch_authorized(authorized_id, authorized_registered)
+    result = await patch_authorized(authorized_id, authorized_registered)
 
     if result is None:
         raise HTTPException(status_code=404, detail="Authorized not found")
