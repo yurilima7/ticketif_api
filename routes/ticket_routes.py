@@ -27,7 +27,7 @@ async def create_permanents_authorizations(days: PermanentAuthorization):
         if day.use_day_date != '':
             ticket_id = await creat_ticket(
                 Ticket(student_id=day.student_id, week_id=day.week_id, meal_id=day.meal_id,
-                       justification_id=day.justification_id, status_id=2, solicitation_day=day.use_day_date,
+                       justification_id=day.justification_id, status_id=day.status_id, solicitation_day=day.use_day_date,
                        use_day=day.use_day, text=day.text, is_permanent=1, use_day_date=day.use_day_date,
                        payment_day=""))
 
