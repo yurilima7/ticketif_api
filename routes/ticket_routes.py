@@ -4,7 +4,7 @@ from models.permanent import PermanentAuthorization
 from models.ticket import Ticket
 from repositories.permanent_day_repository import get_days, creat_permanent_day
 from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
-    checks_permanent_authorization
+    checks_permanent_authorization, check_use_ticket
 
 ticket_router = APIRouter()
 
@@ -35,6 +35,7 @@ async def create_permanents_authorizations(days: PermanentAuthorization):
 # Rota que retorna o histórico de tickets do estudante
 @ticket_router.get("/ticket/{student_id}")
 async def all_tickets(student_id: int):
+    await check_use_ticket(student_id)
     await checks_permanent_authorization(student_id)
     tickets = await get_all_tickets(student_id)
 

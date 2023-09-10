@@ -113,6 +113,23 @@ async def delete_ticket(ticket_id: int):
     return await db_ticket.execute(query)
 
 
+async def check_use_ticket(student_id: int):
+    # Dia de hoje
+    today = date.today()
+
+    query = select([tickets]).where(
+        and_(func.DATE(tickets.c.use_day_date) < today,
+             tickets.c.student_id == student_id, tickets.c.status_id == 4)
+    )
+
+    authorized_tickets = await db_ticket.fetch_all(query)
+
+    for authorized in authorized_tickets:
+        print(authorized[0])
+        query = tickets.update().where(tickets.c.id == authorized[0]).values(**{"status_id": 6})
+        await db_ticket.execute(query)
+
+
 # Função responsável por criar os tickets permanentes todos os dias às 00h
 async def checks_permanent_authorization(student_id: int):
     # Dia de hoje

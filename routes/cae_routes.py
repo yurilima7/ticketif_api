@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from repositories.permanent_day_repository import get_not_authorized, patch_authorized
+from models.student_authorization import StudentPermanentAuthorization
+from repositories.permanent_day_repository import get_not_authorized, patch_authorized_permanent
 from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, \
     delete_permanent_tickets, period_report, daily_report
 
@@ -79,11 +80,7 @@ async def permanents_not_authorized():
 
 
 # Rota de aprovamento ou desaprovação de permanentes
-@cae_router.patch("/not-authorized/{authorized_id}")
-async def update_not_authorized(authorized_id: int, authorized_registered: dict):
-    result = await patch_authorized(authorized_id, authorized_registered)
-
-    if result is None:
-        raise HTTPException(status_code=404, detail="Authorized not found")
-
-    return result
+@cae_router.patch("/not-authorized/{authorization_status}")
+async def update_not_authorized(authorization_status: int, listPermanents: StudentPermanentAuthorization):
+    for permanentTicket in listPermanents.authorizations:
+        await patch_authorized_permanent(permanentTicket.idStudent, {'authorized': authorization_status})

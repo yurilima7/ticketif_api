@@ -40,3 +40,10 @@ async def get_not_authorized():
 async def patch_authorized(authorized_id: int, updated_fields: dict):
     query = permanent.update().where(permanent.c.id == authorized_id).values(**updated_fields)
     return await db_ticket.execute(query)
+
+
+# Função responsável por aprovar ou desaprovar a autorização dos permanentes
+async def patch_authorized_permanent(student_id: int, updated_fields: dict):
+    query = permanent.update().where(permanent.c.student_id == student_id and permanent.c.authorized == 0)\
+        .values(**updated_fields)
+    return await db_ticket.execute(query)
