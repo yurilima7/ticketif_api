@@ -147,10 +147,11 @@ async def checks_permanent_authorization(student_id: int):
     )
 
     day_tickets = await db_ticket.fetch_all(query)
+    print(day_tickets)
 
     # Caso não exista procura na tabela de permanentes se existe autorização para o dia atual
     # Caso encontre, cria os tickets para o dia de hoje
-    if day_tickets is None:
+    if len(day_tickets) == 0:
         week_query = select([week]).where(week.c.description == formatted_day_name_title)
         result = await db_ticket.fetch_one(week_query)
         print(result)
