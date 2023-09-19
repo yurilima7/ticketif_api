@@ -55,7 +55,7 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
             #         print(student)
             #
             #         if not student:
-            #             name = data[0]['givenName'].value
+            #             name = data[0]['displayname'].value
             #             user_json = json.dumps(f"OK:{name}")
             #             await create_student(Student(name=name, matricula=matricula, password='', type=verification_type))
             #             print(user_json)
