@@ -53,12 +53,11 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
             #         student = await get_student(matricula)
             #         verification_type = await get_type_student(matricula)
             #         print(student)
+            #         print(data[0]['displayname'].value)
             #
             #         if not student:
             #             name = data[0]['displayname'].value
-            #             user_json = json.dumps(f"OK:{name}")
             #             await create_student(Student(name=name, matricula=matricula, password='', type=verification_type))
-            #             print(user_json)
             #             print(data[0])
             #             print(student)
             #             print(verification_type)
