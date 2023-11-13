@@ -36,42 +36,40 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
     if matricula:
         if password:
             student = await get_student(matricula)
-            verification_type = await get_type_student(matricula)
             print(student)
 
-            return {"result": 'Login realizado com sucesso!', "matricula": matricula}
+            server = Server("ldap://10.9.10.50:389")
+            conn = Connection(server, user=f"CN={matricula},OU=Alunos,OU=CAMP-CAX,OU=IFMA,DC=ifma,DC=edu",
+                              password=password)
 
-            # server = Server("ldap://10.9.10.50:389")
-            # conn = Connection(server, user=f"CN={matricula},OU=Alunos,OU=CAMP-CAX,OU=IFMA,DC=ifma,DC=edu",
-            #                   password=password)
-            #
-            # if conn.bind():
-            #     conn.search("OU=Alunos,OU=CAMP-CAX,OU=IFMA,DC=ifma,DC=edu", f"(samaccountname={matricula})",
-            #                 attributes=["*"])
-            #     data = conn.entries
-            #     if data:
-            #         student = await get_student(matricula)
-            #         verification_type = await get_type_student(matricula)
-            #         print(student)
-            #         print(data[0]['displayname'].value)
-            #
-            #         if not student:
-            #             name = data[0]['displayname'].value
-            #             await create_student(Student(name=name, matricula=matricula, password='', type=verification_type))
-            #             print(data[0])
-            #             print(student)
-            #             print(verification_type)
-            #
-            #         return {"result": 'Login realizado com sucesso!', "matricula": matricula}
-            #
-            #     else:
-            #         error_json = json.dumps("Falha na autenticação!")
-            #         print(error_json)
-            #         raise HTTPException(status_code=404, detail="Falha na autenticação!")
-            # else:
-            #     error_json = json.dumps("Login ou senha inválido")
-            #     print(error_json)
-            #     raise HTTPException(status_code=401, detail="Login ou senha inválido!")
+            if conn.bind():
+                conn.search("OU=Alunos,OU=CAMP-CAX,OU=IFMA,DC=ifma,DC=edu", f"(samaccountname={matricula})",
+                            attributes=["*"])
+                data = conn.entries
+                print(f"Suap {data}")
+                if data:
+                    student = await get_student(matricula)
+                    verification_type = await get_type_student(matricula)
+                    print(student)
+                    print(data[0]['displayname'].value)
+
+                    if not student:
+                        name = data[0]['displayname'].value
+                        await create_student(Student(name=name, matricula=matricula, password='', type=verification_type))
+                        print(data[0])
+                        print(student)
+                        print(verification_type)
+
+                    return {"result": 'Login realizado com sucesso!', "matricula": matricula}
+
+                else:
+                    error_json = json.dumps("Falha na autenticação!")
+                    print(error_json)
+                    raise HTTPException(status_code=404, detail="Falha na autenticação!")
+            else:
+                error_json = json.dumps("Login ou senha inválido")
+                print(error_json)
+                raise HTTPException(status_code=401, detail="Login ou senha inválido!")
         else:
             error_json = json.dumps("Preencher senha")
             print(error_json)
