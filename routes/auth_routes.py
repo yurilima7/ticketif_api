@@ -37,6 +37,10 @@ async def login(matricula: str = Body(...), password: str = Body(...)):
         if password:
             student = await get_student(matricula)
             print(student)
+            verification_type = await get_type_student(matricula)
+            print(student)
+
+            return {"result": 'Login realizado com sucesso!', "matricula": matricula}
 
             server = Server("ldap://10.9.10.50:389")
             conn = Connection(server, user=f"CN={matricula},OU=Alunos,OU=CAMP-CAX,OU=IFMA,DC=ifma,DC=edu",
