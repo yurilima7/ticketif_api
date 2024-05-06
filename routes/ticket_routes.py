@@ -1,7 +1,9 @@
+from datetime import datetime, time
 from fastapi import APIRouter, HTTPException
 
 from models.permanent import PermanentAuthorization
 from models.ticket import Ticket
+from models.ticket_request import TicketRequest
 from repositories.permanent_day_repository import get_days, creat_permanent_day
 from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
     checks_permanent_authorization, check_use_ticket
@@ -11,11 +13,45 @@ ticket_router = APIRouter()
 
 # Rota responsável por solicitar um Ticket
 @ticket_router.post("/ticket")
-async def request_ticket(ticket_info: Ticket):
-    ticket_id = await creat_ticket(ticket_info)
-    ticket_registered = await get_ticket(ticket_id)
+async def request_ticket(ticket_info: TicketRequest):
+   
+    print(ticket_info)
 
-    return ticket_registered
+    now = datetime.now().time()
+    start_time = time(7, 0)
+    end_time = time(10, 30)
+
+    start_time_dinner = time(13, 0)
+    end_time_dinner = time(18, 30)
+
+    if ticket_info.is_cae == 0:
+        if (end_time >= now >= start_time) or (end_time_dinner >= now >= start_time_dinner):
+            print('pode pedir')
+            ticket = Ticket(student_id=ticket_info.student_id, week_id=ticket_info.week_id,meal_id=ticket_info.meal_id,status_id=ticket_info.status_id,justification_id=ticket_info.justification_id,solicitation_day=ticket_info.solicitation_day,use_day=ticket_info.use_day,use_day_date=ticket_info.use_day_date,payment_day=ticket_info.payment_day,text=ticket_info.text,is_permanent=ticket_info.is_permanent,
+            )
+
+            ticket_id = await creat_ticket(ticket=ticket)
+            ticket_registered = await get_ticket(ticket_id)
+
+            if ticket_registered == None:
+                raise HTTPException(status_code=404, detail="Erro ao solicitar ticket")
+            else: 
+                return ticket_registered
+        else:
+            print('não pode pedir')
+            raise HTTPException(status_code=404, detail="Solicitação fora do horário")
+        
+    else:
+        ticket = Ticket(student_id=ticket_info.student_id, week_id=ticket_info.week_id,meal_id=ticket_info.meal_id,status_id=ticket_info.status_id,justification_id=ticket_info.justification_id,solicitation_day=ticket_info.solicitation_day,use_day=ticket_info.use_day,use_day_date=ticket_info.use_day_date,payment_day=ticket_info.payment_day,text=ticket_info.text,is_permanent=ticket_info.is_permanent,
+            )
+
+        ticket_id = await creat_ticket(ticket=ticket)
+        ticket_registered = await get_ticket(ticket_id) 
+
+        if ticket_registered == None:
+            raise HTTPException(status_code=404, detail="Erro ao solicitar ticket")
+        else: 
+            return ticket_registered
 
 
 # Rota responsável pela criação das autorizações permanentes
