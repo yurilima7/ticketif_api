@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from database.database_ticket import meal, justification, db_ticket
+from database.database_ticket import meal, justification,status, db_ticket
 
 
 # Função que retorna os dados armazenados nas tabelas
@@ -11,4 +11,11 @@ async def get_meals_and_justifications():
     justifications = await db_ticket.fetch_all(query_justification)
 
     return {"meals": meals, "justifications": justifications}
+
+
+async def get_status():
+    query = select([status])
+    all_status = await db_ticket.fetch_all(query)
+
+    return {"status": all_status}
 

@@ -2,7 +2,7 @@ from sqlalchemy import select, and_, func
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students, permanent, week
 from models.ticket import Ticket
-from datetime import date
+from datetime import date, datetime
 from babel.dates import format_date
 
 
@@ -39,7 +39,29 @@ async def get_all_tickets(student_id: int):
         meal.c.description.label('meal_description')
     ]).select_from(join_main).where(tickets.c.student_id == student_id)
 
-    return await db_ticket.fetch_all(query)
+    student_tickets = await db_ticket.fetch_all(query)
+
+    for ticket in student_tickets:
+        current_status = ticket['status_id']
+        use_day_date = datetime.strptime(ticket['use_day_date'].split()[0], '%Y-%m-%d').date()
+
+        today = datetime.now().date()
+
+        if current_status not in [5, 6, 7] and use_day_date < today:
+            await patch_ticket(ticket['id'], {'status_id': 6})
+
+    query = select([
+        tickets,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
+        status.c.description.label('status_description'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description')
+    ]).select_from(join_main).where(tickets.c.student_id == student_id)
+
+    student_tickets_final = await db_ticket.fetch_all(query)
+
+    return student_tickets_final
 
 
 # Função que retorna todos os tickets usados pelos alunos no mês
