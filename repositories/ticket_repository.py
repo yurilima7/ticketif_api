@@ -42,12 +42,16 @@ async def get_all_tickets(student_id: int):
     student_tickets = await db_ticket.fetch_all(query)
 
     for ticket in student_tickets:
-        current_status = ticket['status_id']
+        current_status_id = ticket['status_id']
+        current_status = ticket['meal_description']
         use_day_date = datetime.strptime(ticket['use_day_date'].split()[0], '%Y-%m-%d').date()
 
         today = datetime.now().date()
+        hour = datetime.now().hour
 
-        if current_status not in [5, 6, 7] and use_day_date < today:
+        if current_status_id not in [5, 6, 7] and use_day_date < today:
+            await patch_ticket(ticket['id'], {'status_id': 6})
+        elif current_status == 'Almoço' and hour > 14:
             await patch_ticket(ticket['id'], {'status_id': 6})
 
     query = select([
