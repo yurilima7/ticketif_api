@@ -80,10 +80,32 @@ async def all_tickets(student_id: int):
     return tickets
 
 
-# Rota responsável por confirmar presença ou cancelar o ticket do estudante
+# Rota responsável por cancelar o ticket do estudante
 @ticket_router.patch("/ticket/{ticket_id}")
 async def status_modification(ticket_id: int, ticket_registered: dict):
     ticket_mod = await patch_ticket(ticket_id, ticket_registered)
+    if ticket_mod is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    ticket_registered_mod = await get_ticket(ticket_id)
+
+    return ticket_registered_mod
+
+
+# Rota responsável por confirmar presença ou cancelar o ticket do estudante
+@ticket_router.patch("/confirm-ticket/{ticket_id}")
+async def confirm_ticket(ticket_id: int, ticket_registered: dict):
+    now = datetime.now().time()
+    start_time = time(7, 0)
+    end_time = time(10, 30)
+
+    timeLimit = (not (end_time >= now >= start_time))
+
+    if (ticket_registered["meal_id"] == 2 and timeLimit):
+        raise HTTPException(status_code=404, detail="A confirmação só está disponível no período das 7h às 10h30")
+    
+    ticket_mod = await patch_ticket(ticket_id, ticket_registered)
+    
     if ticket_mod is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
 

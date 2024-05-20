@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from sqlalchemy import select
 
-from database.database_ticket import admUser, db_ticket
+from database.database_ticket import admUser, db_ticket, classes
 from models.adm_user import AdmUser
 
 pwd_context = CryptContext(schemes=["bcrypt"])
@@ -20,3 +20,8 @@ async def create_adm_user(user: AdmUser):
 async def get_auth_user(username: str):
     query = select([admUser]).where(admUser.c.username == username)
     return await db_ticket.fetch_one(query)
+
+
+async def insert_class(description: str, course: str):
+    query = classes.insert().values(description=description, course=course)
+    return await db_ticket.execute(query)

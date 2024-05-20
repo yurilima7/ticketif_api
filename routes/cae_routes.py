@@ -1,9 +1,11 @@
+from typing import List
 from fastapi import APIRouter, HTTPException, Query
 
 from models.student_authorization import StudentPermanentAuthorization
 from repositories.permanent_day_repository import get_not_authorized, patch_authorized_permanent
 from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, \
     delete_permanent_tickets, period_report, daily_report
+from repositories.adm_user_repositoty import insert_class
 
 cae_router = APIRouter()
 
@@ -84,3 +86,16 @@ async def permanents_not_authorized():
 async def update_not_authorized(authorization_status: int, listPermanents: StudentPermanentAuthorization):
     for permanentTicket in listPermanents.authorizations:
         await patch_authorized_permanent(permanentTicket.idStudent, {'authorized': authorization_status})
+
+
+# Rota para inserir novas turmas
+@cae_router.post("/new-classes")
+async def add_new_classes(classes: List[dict]):
+    print(classes)
+    results = []
+    for classe in classes:
+        result = await insert_class(description=classe["description"], course=classe["course"])
+        results.append(result)
+
+    if len(results) == len(classes):
+        return {"status_code": 200, "message": "Turmas inseridas com sucesso!"}
