@@ -17,29 +17,17 @@ async def request_ticket(ticket_info: TicketRequest):
    
     print(ticket_info)
 
-    now = datetime.now().time()
-    start_time = time(7, 0)
-    end_time = time(10, 30)
-
-    start_time_dinner = time(13, 0)
-    end_time_dinner = time(18, 30)
-
     if ticket_info.is_cae == 0:
-        if (end_time >= now >= start_time) or (end_time_dinner >= now >= start_time_dinner):
-            print('pode pedir')
-            ticket = Ticket(student_id=ticket_info.student_id, week_id=ticket_info.week_id,meal_id=ticket_info.meal_id,status_id=ticket_info.status_id,justification_id=ticket_info.justification_id,solicitation_day=ticket_info.solicitation_day,use_day=ticket_info.use_day,use_day_date=ticket_info.use_day_date,payment_day=ticket_info.payment_day,text=ticket_info.text,is_permanent=ticket_info.is_permanent,
-            )
+        ticket = Ticket(student_id=ticket_info.student_id, week_id=ticket_info.week_id,meal_id=ticket_info.meal_id,status_id=ticket_info.status_id,justification_id=ticket_info.justification_id,solicitation_day=ticket_info.solicitation_day,use_day=ticket_info.use_day,use_day_date=ticket_info.use_day_date,payment_day=ticket_info.payment_day,text=ticket_info.text,is_permanent=ticket_info.is_permanent,
+        )
 
-            ticket_id = await creat_ticket(ticket=ticket)
-            ticket_registered = await get_ticket(ticket_id)
+        ticket_id = await creat_ticket(ticket=ticket)
+        ticket_registered = await get_ticket(ticket_id)
 
-            if ticket_registered == None:
-                raise HTTPException(status_code=404, detail="Erro ao solicitar ticket")
-            else: 
-                return ticket_registered
-        else:
-            print('não pode pedir')
-            raise HTTPException(status_code=404, detail="Solicitação fora do horário")
+        if ticket_registered == None:
+            raise HTTPException(status_code=404, detail="Erro ao solicitar ticket")
+        else: 
+            return ticket_registered
         
     else:
         ticket = Ticket(student_id=ticket_info.student_id, week_id=ticket_info.week_id,meal_id=ticket_info.meal_id,status_id=ticket_info.status_id,justification_id=ticket_info.justification_id,solicitation_day=ticket_info.solicitation_day,use_day=ticket_info.use_day,use_day_date=ticket_info.use_day_date,payment_day=ticket_info.payment_day,text=ticket_info.text,is_permanent=ticket_info.is_permanent,
@@ -95,15 +83,6 @@ async def status_modification(ticket_id: int, ticket_registered: dict):
 # Rota responsável por confirmar presença ou cancelar o ticket do estudante
 @ticket_router.patch("/confirm-ticket/{ticket_id}")
 async def confirm_ticket(ticket_id: int, ticket_registered: dict):
-    now = datetime.now().time()
-    start_time = time(7, 0)
-    end_time = time(10, 30)
-
-    timeLimit = (not (end_time >= now >= start_time))
-
-    if (ticket_registered["meal_id"] == 2 and timeLimit):
-        raise HTTPException(status_code=404, detail="A confirmação só está disponível no período das 7h às 10h30")
-    
     ticket_mod = await patch_ticket(ticket_id, ticket_registered)
     
     if ticket_mod is None:

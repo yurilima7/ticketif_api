@@ -156,7 +156,68 @@ async def check_use_ticket(student_id: int):
         await db_ticket.execute(query)
 
 
-# Função responsável por criar os tickets permanentes todos os dias às 00h
+async def delete_permanent(permanent_id: int):
+    query = permanent.delete().where(permanent.c.id == permanent_id)
+    return await db_ticket.execute(query)
+
+
+# Procura na tabela de permanentes se existe autorização para o dia atual
+# Caso encontre, cria os tickets para o dia de hoje
+async def create(formatted_day_name_title, student_id, today, is_status_one, ticket_id):
+    week_query = select([week]).where(week.c.description == formatted_day_name_title)
+    result = await db_ticket.fetch_one(week_query)
+    print(result)
+    week_day_id = result['id']
+    week_description = result['description']
+
+    join_main = permanent.join(meal, permanent.c.meal_id == meal.c.id) \
+        .join(justification, permanent.c.justification_id == justification.c.id)
+
+    query = select([
+        permanent,
+        meal.c.description.label('meal_description'),
+        meal.c.id.label('meal_desc_id'),
+        justification.c.id.label('justification_meal_id'),
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
+                                            permanent.c.authorized == 1))
+    
+    query_rejected = select([
+        permanent,
+        meal.c.description.label('meal_description'),
+        meal.c.id.label('meal_desc_id'),
+        justification.c.id.label('justification_meal_id'),
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
+                                            permanent.c.authorized == 2))
+
+    all_permanents = await db_ticket.fetch_all(query)
+    all_rejected = await db_ticket.fetch_all(query_rejected)
+
+    if not is_status_one and len(all_rejected) > 0:
+        for permanent_authorization in all_permanents:
+            await creat_ticket(Ticket(
+                student_id=student_id,
+                week_id=week_day_id,
+                meal_id=permanent_authorization["meal_desc_id"],
+                status_id=2,
+                justification_id=permanent_authorization["justification_meal_id"],
+                solicitation_day="",
+                use_day=week_description,
+                use_day_date=str(today),
+                payment_day="",
+                text="",
+                is_permanent=1,
+            ))
+
+    elif len(all_permanents) > 0:
+        await patch_ticket(ticket_id=ticket_id, updated_fields={"status_id": 2})
+
+    elif len(all_rejected) > 0:
+        await patch_ticket(ticket_id=ticket_id, updated_fields={"status_id": 7})
+        for rejected in all_rejected:
+            await delete_permanent(permanent_id=rejected[0])
+
+
+# Função responsável por criar os tickets permanentes
 async def checks_permanent_authorization(student_id: int):
     # Dia de hoje
     today = date.today()
@@ -174,44 +235,21 @@ async def checks_permanent_authorization(student_id: int):
 
     day_tickets = await db_ticket.fetch_all(query)
     print(day_tickets)
+    print(len(day_tickets))
 
-    # Caso não exista procura na tabela de permanentes se existe autorização para o dia atual
-    # Caso encontre, cria os tickets para o dia de hoje
     if len(day_tickets) == 0:
-        week_query = select([week]).where(week.c.description == formatted_day_name_title)
-        result = await db_ticket.fetch_one(week_query)
-        print(result)
-        week_day_id = result['id']
-        week_description = result['description']
+        # Tenta criar um permanente
+        await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
 
-        join_main = permanent.join(meal, permanent.c.meal_id == meal.c.id) \
-            .join(justification, permanent.c.justification_id == justification.c.id)
-
-        query = select([
-            permanent,
-            meal.c.description.label('meal_description'),
-            meal.c.id.label('meal_desc_id'),
-            justification.c.id.label('justification_meal_id'),
-        ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
-                                             permanent.c.authorized == 1))
-
-        all_permanents = await db_ticket.fetch_all(query)
-
-        for permanent_authorization in all_permanents:
-            await creat_ticket(Ticket(
-                student_id=student_id,
-                week_id=week_day_id,
-                meal_id=permanent_authorization["meal_desc_id"],
-                status_id=2,
-                justification_id=permanent_authorization["justification_meal_id"],
-                solicitation_day="",
-                use_day=week_description,
-                use_day_date=str(today),
-                payment_day="",
-                text="",
-                is_permanent=1,
-            ))
-
+    for day_ticket in day_tickets:
+        if day_ticket[4] == 6:
+            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
+        elif day_ticket[4] == 7:
+            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
+        elif day_ticket[4] == 1:
+            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=True, ticket_id=day_ticket[0])
+        elif day_ticket[4] > 1 or day_ticket[4] < 6:
+            continue
 
 # Função deletadora de tickets permanentes
 async def delete_permanent_tickets():
