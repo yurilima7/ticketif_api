@@ -1,10 +1,10 @@
 from datetime import datetime, time
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from models.permanent import PermanentAuthorization
 from models.ticket import Ticket
 from models.ticket_request import TicketRequest
-from repositories.permanent_day_repository import get_days, creat_permanent_day
+from repositories.permanent_day_repository import checking_existing_request, get_days, creat_permanent_day
 from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
     checks_permanent_authorization, check_use_ticket
 
@@ -45,15 +45,36 @@ async def request_ticket(ticket_info: TicketRequest):
 # Rota responsável pela criação das autorizações permanentes
 @ticket_router.post("/permanent")
 async def create_permanents_authorizations(days: PermanentAuthorization):
-    for day in days.permanent_days:
-        await creat_permanent_day(day)
+    existing_permanent = 0
+    created = 0
 
-        if day.use_day_date != '':
-            ticket_id = await creat_ticket(
-                Ticket(student_id=day.student_id, week_id=day.week_id, meal_id=day.meal_id,
-                       justification_id=day.justification_id, status_id=day.status_id, solicitation_day=day.use_day_date,
-                       use_day=day.use_day, text=day.text, is_permanent=1, use_day_date=day.use_day_date,
-                       payment_day=""))
+    for day in days.permanent_days:
+        check_result = await checking_existing_request(meal_id=day.meal_id, student_id=day.student_id, week_id=day.week_id)
+        print(check_result)
+        if len(check_result) == 0:
+            await creat_permanent_day(day)
+
+            if day.use_day_date != '':
+                ticket_id = await creat_ticket(
+                    Ticket(student_id=day.student_id, week_id=day.week_id, meal_id=day.meal_id,
+                        justification_id=day.justification_id, status_id=day.status_id, solicitation_day=day.use_day_date,
+                        use_day=day.use_day, text=day.text, is_permanent=1, use_day_date=day.use_day_date,
+                        payment_day=""))
+                
+            created += 1
+        else:
+            existing_permanent += 1
+
+    if created == len(days.permanent_days):
+        return {"status": status.HTTP_201_CREATED, "message": "Solicitação realizada com sucesso!"}
+    elif created == 1 and existing_permanent > 0:
+        return {"status": status.HTTP_201_CREATED, "message": f"{created} solicitação realizada com sucesso!"}
+    elif created > 1 and existing_permanent > 0:
+        return {"status": status.HTTP_201_CREATED, "message": f"{created} solicitações realizadas com sucesso!"}
+    elif created == 0 and existing_permanent > 0:
+        raise HTTPException(status_code=404, detail="Falha ao solicitar permanentes por já existirem existentes")
+    else:
+        raise HTTPException(status_code=404, detail="Falha ao solicitar permanentes")
 
 
 # Rota que retorna o histórico de tickets do estudante

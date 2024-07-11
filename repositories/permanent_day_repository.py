@@ -4,6 +4,18 @@ from database.database_ticket import permanent, db_ticket, justification, meal, 
 from models.permanent import Permanent
 
 
+# Verificando se existe uma solicitação permanente
+# Para a refeição solicitada e o estudante solicitante
+async def checking_existing_request(meal_id: int , student_id: int, week_id: int):
+    query = select([permanent]).where(
+        (permanent.c.student_id == student_id) & 
+        (permanent.c.meal_id == meal_id) & 
+        (permanent.c.week_id == week_id) & 
+        (permanent.c.authorized != 2)
+    )
+    return await db_ticket.fetch_all(query)
+
+
 # Função que cria um ticket permanente
 async def creat_permanent_day(permanentDay: Permanent):
     query = permanent.insert().values(student_id=permanentDay.student_id, meal_id=permanentDay.meal_id,
