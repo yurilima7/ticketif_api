@@ -10,7 +10,7 @@ if AMBIENTE == 'PROD':
     DATABASE_URL = "sqlite:////sqlite_db/database_ticket_if_prod.db"
     print('AMBIENTE PROD....')
 else:
-    DATABASE_URL = "sqlite:///database/database_ticket_if_dev.db"
+    DATABASE_URL = "sqlite:///database/database_ticket_if.db"
     print('AMBIENTE DEV....')
 
 db_ticket = databases.Database(DATABASE_URL)
