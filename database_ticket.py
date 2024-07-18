@@ -8,10 +8,10 @@ if 'AMBIENTE' in os.environ:
 
 if AMBIENTE == 'PROD':
     DATABASE_URL = "sqlite:////sqlite_db/database_ticket_if_prod.db"
-    print('AMBIENTE PROD....')
+    print('PROD....')
 else:
     DATABASE_URL = "sqlite:///database/database_ticket_if_dev.db"
-    print('AMBIENTE DEV....')
+    print('DEV....')
 
 db_ticket = databases.Database(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
