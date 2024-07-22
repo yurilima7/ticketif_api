@@ -11,4 +11,4 @@ docker build -t $IMAGE_NAME .
 
 
 docker container rm --force $APP_NAME
-docker run --name $APP_NAME -p 8088:8000 -d -v $VOLUME_MAPPING $IMAGE_NAME
+docker run --name $APP_NAME --restart always -p 8088:8000 -d -v $VOLUME_MAPPING $IMAGE_NAME
