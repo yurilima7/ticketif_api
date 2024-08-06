@@ -1,3 +1,4 @@
+from operator import or_
 from sqlalchemy import select, and_, func
 
 from database.database_ticket import tickets, db_ticket, status, justification, meal, students, permanent, week
@@ -49,10 +50,10 @@ async def get_all_tickets(student_id: int):
         today = datetime.now().date()
         hour = datetime.now().hour
 
-        if current_status_id not in [5, 6, 7] and use_day_date < today:
-            await patch_ticket(ticket['id'], {'status_id': 6})
-        elif current_status == 'Almoço' and hour > 14:
-            await patch_ticket(ticket['id'], {'status_id': 6})
+        # if current_status_id not in [5, 6, 7] and use_day_date < today:
+        #     await patch_ticket(ticket['id'], {'status_id': 6})
+        # elif current_status == 'Almoço' and hour > 14:
+        #     await patch_ticket(ticket['id'], {'status_id': 6})
 
     query = select([
         tickets,
@@ -145,11 +146,14 @@ async def check_use_ticket(student_id: int):
 
     query = select([tickets]).where(
         and_(func.DATE(tickets.c.use_day_date) < today,
-             tickets.c.student_id == student_id, tickets.c.status_id == 4)
+             tickets.c.student_id == student_id, 
+            or_(tickets.c.status_id == 4, tickets.c.status_id == 2)
+        )
     )
 
     authorized_tickets = await db_ticket.fetch_all(query)
 
+    print(authorized_tickets)
     for authorized in authorized_tickets:
         print(authorized[0])
         query = tickets.update().where(tickets.c.id == authorized[0]).values(**{"status_id": 6})
@@ -242,7 +246,10 @@ async def checks_permanent_authorization(student_id: int):
         await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
 
     for day_ticket in day_tickets:
-        if day_ticket[4] == 6:
+        # se não permanente ignora
+        if day_ticket[11] == 0:
+            break
+        elif day_ticket[4] == 6:
             await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
         elif day_ticket[4] == 7:
             await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
