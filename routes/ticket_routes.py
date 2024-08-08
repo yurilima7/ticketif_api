@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 from models.permanent import PermanentAuthorization
 from models.ticket import Ticket
 from models.ticket_request import TicketRequest
-from repositories.permanent_day_repository import checking_existing_request, get_days, creat_permanent_day
+from repositories.permanent_day_repository import checking_existing_request, get_days, creat_permanent_day, student_permanent
 from repositories.ticket_repository import creat_ticket, get_ticket, delete_ticket, patch_ticket, get_all_tickets, \
     checks_permanent_authorization, check_use_ticket
 
@@ -50,7 +50,7 @@ async def create_permanents_authorizations(days: PermanentAuthorization):
 
     for day in days.permanent_days:
         check_result = await checking_existing_request(meal_id=day.meal_id, student_id=day.student_id, week_id=day.week_id)
-        print(check_result)
+        print("check result", check_result)
         if len(check_result) == 0:
             await creat_permanent_day(day)
 
@@ -122,6 +122,16 @@ async def delete_ticket_existing(ticket_id: int):
         raise HTTPException(status_code=404, detail="Ticket not delete")
 
     return {"message": "Ticket deletado com sucesso"}
+
+
+# Rota responsável por deletar um ticket
+@ticket_router.get("/permanent/{student_id}")
+async def all_student_tickets_permanents(student_id: int):
+    permanents = await student_permanent(student_id=student_id)
+    if permanents is None:
+        raise HTTPException(status_code=404, detail="Permanentes não encontrados")
+
+    return permanents
 
 
 # Rota que retorna os dias de tickets permanentes do Estudante

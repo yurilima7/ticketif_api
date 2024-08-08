@@ -1,6 +1,6 @@
 from sqlalchemy import select
 
-from database.database_ticket import permanent, db_ticket, justification, meal, students
+from database.database_ticket import permanent, db_ticket, justification, meal, students, week
 from models.permanent import Permanent
 
 
@@ -11,7 +11,8 @@ async def checking_existing_request(meal_id: int , student_id: int, week_id: int
         (permanent.c.student_id == student_id) & 
         (permanent.c.meal_id == meal_id) & 
         (permanent.c.week_id == week_id) & 
-        (permanent.c.authorized != 2)
+        (permanent.c.authorized != 2) &
+        (permanent.c.authorized != 4)
     )
     return await db_ticket.fetch_all(query)
 
@@ -45,6 +46,25 @@ async def get_not_authorized():
         meal.c.description.label('meal_description'),
         students.c.type,
     ]).select_from(join_main).where(permanent.c.authorized == 0)
+    return await db_ticket.fetch_all(query)
+
+
+# Função que retorna as autorizações permanentes do estudante
+async def student_permanent(student_id: int):
+    join_main = permanent.join(justification, permanent.c.justification_id == justification.c.id) \
+        .join(meal, permanent.c.meal_id == meal.c.id) \
+        .join(week, permanent.c.week_id == week.c.id) \
+        .join(students, permanent.c.student_id == students.c.id)
+
+    query = select([
+        permanent,
+        students.c.matricula.label('student'),
+        students.c.name.label('student_name'),
+        justification.c.description.label('justification_description'),
+        meal.c.description.label('meal_description'),
+        week.c.description.label('week_description'),
+        students.c.type,
+    ]).select_from(join_main).where(permanent.c.student_id == student_id)
     return await db_ticket.fetch_all(query)
 
 

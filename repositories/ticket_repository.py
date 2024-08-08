@@ -165,12 +165,16 @@ async def delete_permanent(permanent_id: int):
     return await db_ticket.execute(query)
 
 
+async def update_permanent(permanent_id: int):
+    query = permanent.update().where(permanent.c.id == permanent_id).values(**{"authorized": 4})
+    return await db_ticket.execute(query)
+
+
 # Procura na tabela de permanentes se existe autorização para o dia atual
-# Caso encontre, cria os tickets para o dia de hoje
-async def create(formatted_day_name_title, student_id, today, is_status_one, ticket_id):
+async def search_permanents(formatted_day_name_title, student_id):
     week_query = select([week]).where(week.c.description == formatted_day_name_title)
     result = await db_ticket.fetch_one(week_query)
-    print(result)
+    print("dia atual", result)
     week_day_id = result['id']
     week_description = result['description']
 
@@ -190,35 +194,58 @@ async def create(formatted_day_name_title, student_id, today, is_status_one, tic
         meal.c.description.label('meal_description'),
         meal.c.id.label('meal_desc_id'),
         justification.c.id.label('justification_meal_id'),
-    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id,
                                             permanent.c.authorized == 2))
+    
+    query_analysis = select([
+        permanent,
+        meal.c.description.label('meal_description'),
+        meal.c.id.label('meal_desc_id'),
+        justification.c.id.label('justification_meal_id'),
+    ]).select_from(join_main).where(and_(permanent.c.student_id == student_id, permanent.c.week_id == week_day_id,
+                                            permanent.c.authorized == 0))
 
     all_permanents = await db_ticket.fetch_all(query)
     all_rejected = await db_ticket.fetch_all(query_rejected)
+    all_analysis = await db_ticket.fetch_all(query_analysis)
 
-    if not is_status_one and len(all_rejected) > 0:
-        for permanent_authorization in all_permanents:
-            await creat_ticket(Ticket(
-                student_id=student_id,
-                week_id=week_day_id,
-                meal_id=permanent_authorization["meal_desc_id"],
-                status_id=2,
-                justification_id=permanent_authorization["justification_meal_id"],
-                solicitation_day="",
-                use_day=week_description,
-                use_day_date=str(today),
-                payment_day="",
-                text="",
-                is_permanent=1,
-            ))
+    return (all_permanents, all_rejected, all_analysis)
 
-    elif len(all_permanents) > 0:
-        await patch_ticket(ticket_id=ticket_id, updated_fields={"status_id": 2})
+# Caso encontre, cria os tickets para o dia de hoje
+async def create(formatted_day_name_title, student_id, today, all_permanents):
+    week_query = select([week]).where(week.c.description == formatted_day_name_title)
+    result = await db_ticket.fetch_one(week_query)
+    print("dia atual", result)
+    week_day_id = result['id']
+    week_description = result['description']
 
-    elif len(all_rejected) > 0:
-        await patch_ticket(ticket_id=ticket_id, updated_fields={"status_id": 7})
-        for rejected in all_rejected:
-            await delete_permanent(permanent_id=rejected[0])
+    for permanent_authorization in all_permanents:
+        await creat_ticket(Ticket(
+            student_id=student_id,
+            week_id=week_day_id,
+            meal_id=permanent_authorization["meal_desc_id"],
+            status_id=2,
+            justification_id=permanent_authorization["justification_meal_id"],
+            solicitation_day="",
+            use_day=week_description,
+            use_day_date=str(today),
+            payment_day="",
+            text="",
+            is_permanent=1,
+        ))
+
+
+async def patch_all_rejected(all_rejected):
+    for rejected in all_rejected:
+        await update_permanent(permanent_id=rejected[0])
+
+
+def check_value_in_tuples(list_tuples, value_search, position_search):
+
+  for tuple_value in list_tuples:
+    if len(tuple_value) > position_search and tuple_value[position_search] == value_search:
+      return True
+  return False
 
 
 # Função responsável por criar os tickets permanentes
@@ -238,24 +265,59 @@ async def checks_permanent_authorization(student_id: int):
     )
 
     day_tickets = await db_ticket.fetch_all(query)
-    print(day_tickets)
-    print(len(day_tickets))
+    print("dia", day_tickets)
+    print("tamanho", len(day_tickets))
 
-    if len(day_tickets) == 0:
+    all_permanents_approved, all_rejected, all_analysis = await search_permanents(formatted_day_name_title=formatted_day_name_title, student_id=student_id)
+
+    print("todos os rejeitados", all_rejected)
+    print("todos os permanentes", all_permanents_approved)
+    print("todos os em análise", all_analysis)
+
+    if len(day_tickets) == 0 and len(all_permanents_approved) > 0:
         # Tenta criar um permanente
-        await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
+        await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, all_permanents=all_permanents_approved)
 
     for day_ticket in day_tickets:
+        print(day_ticket)
         # se não permanente ignora
         if day_ticket[11] == 0:
-            break
-        elif day_ticket[4] == 6:
-            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
-        elif day_ticket[4] == 7:
-            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=False, ticket_id=0)
-        elif day_ticket[4] == 1:
-            await create(formatted_day_name_title=formatted_day_name_title, student_id=student_id, today=today, is_status_one=True, ticket_id=day_ticket[0])
-        elif day_ticket[4] > 1 or day_ticket[4] < 6:
+            continue
+        
+        # se em análise com aprovados presente
+        elif day_ticket[11] == 1 and day_ticket[4] == 1 and len(all_permanents_approved) > 0:
+            for permanent_approved in all_permanents_approved:
+                # se o tipo de refeição é igual
+                if day_ticket[3] == permanent_approved[2]:
+                    await patch_ticket(ticket_id=day_ticket[0], updated_fields={"status_id": 2})
+        
+        # se em análise sem aprovados presente
+        elif day_ticket[11] == 1 and day_ticket[4] == 1 and len(all_rejected) > 0:
+            await patch_ticket(ticket_id=day_ticket[0], updated_fields={"status_id": 6})
+            await patch_all_rejected(all_rejected=all_rejected)
+
+        # se não foi autorizado
+        elif day_ticket[11] == 1 and day_ticket[4] == 7 and len(all_permanents_approved) > 0:
+            for permanent_approved in all_permanents_approved:
+                approved_with_same_data = check_value_in_tuples(list_tuples=day_tickets, value_search=2, position_search=4)
+                print("se tem permanente aprovado com os mesmos dados", approved_with_same_data)
+                # se o tipo de refeição é igual
+                if day_ticket[3] == permanent_approved[2] and not approved_with_same_data:
+                    await creat_ticket(Ticket(
+                        student_id=student_id,
+                        week_id=permanent_approved[3],
+                        meal_id=permanent_approved[2],
+                        status_id=2,
+                        justification_id=permanent_approved[4],
+                        solicitation_day="",
+                        use_day=day_ticket[7],
+                        use_day_date=str(today),
+                        payment_day="",
+                        text="",
+                        is_permanent=1,
+                    ))
+
+        elif day_ticket[11] == 1 and day_ticket[4] > 1 or day_ticket[4] < 6:
             continue
 
 # Função deletadora de tickets permanentes
