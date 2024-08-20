@@ -80,7 +80,6 @@ async def create_permanents_authorizations(days: PermanentAuthorization):
 # Rota que retorna o histórico de tickets do estudante
 @ticket_router.get("/ticket/{student_id}")
 async def all_tickets(student_id: int):
-    await check_use_ticket(student_id)
     await checks_permanent_authorization(student_id)
     tickets = await get_all_tickets(student_id)
 
