@@ -123,7 +123,7 @@ async def delete_ticket_existing(ticket_id: int):
     return {"message": "Ticket deletado com sucesso"}
 
 
-# Rota responsável por deletar um ticket
+# Rota responsável por retornar os tickets permanentes
 @ticket_router.get("/permanent/{student_id}")
 async def all_student_tickets_permanents(student_id: int):
     permanents = await student_permanent(student_id=student_id)

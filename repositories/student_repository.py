@@ -39,3 +39,9 @@ async def create_student(student: Student):
     query = students.insert().values(name=student.name, matricula=student.matricula, password=hashed_password,
                                      type=student.type)
     await db_ticket.execute(query)
+
+
+# Função deletadora de estudantes
+async def delete_students():
+    query = students.delete()
+    return await db_ticket.execute(query)

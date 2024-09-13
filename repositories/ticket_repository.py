@@ -324,3 +324,8 @@ async def checks_permanent_authorization(student_id: int):
 async def delete_permanent_tickets():
     query = permanent.delete()
     return await db_ticket.execute(query)
+
+# Função deletadora de tickets em geral
+async def delete_tickets():
+    query = tickets.delete()
+    return await db_ticket.execute(query)

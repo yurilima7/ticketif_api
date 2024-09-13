@@ -3,7 +3,8 @@ from fastapi import APIRouter, HTTPException, Query
 
 from models.student_authorization import StudentPermanentAuthorization
 from repositories.permanent_day_repository import get_not_authorized, patch_authorized_permanent
-from repositories.ticket_repository import patch_ticket, get_ticket, get_all_tickets_monthly, \
+from repositories.student_repository import delete_students
+from repositories.ticket_repository import delete_tickets, patch_ticket, get_ticket, get_all_tickets_monthly, \
     delete_permanent_tickets, period_report, daily_report
 from repositories.adm_user_repositoty import insert_class
 
@@ -60,14 +61,36 @@ async def day_tickets(daily: str = Query(..., regex=r"\d{4}-\d{2}-\d{2}")):
 
 
 # Rota que deleta todos os tickets da tabela de permanent
-@cae_router.delete("/tickets-delete")
-async def tickets_delete():
+@cae_router.delete("/tickets-permanents-delete", description='Rota para deletar todos os tickets permanentes')
+async def permanents_delete():
     delete = await delete_permanent_tickets()
+
+    if delete is None:
+        raise HTTPException(status_code=404, detail="Tickets permanentes not delete")
+
+    return {"message": "Tickets permanentes deletados com sucesso"}
+
+
+# Rota que deleta todos os tickets da tabela de tickets
+@cae_router.delete("/tickets-delete", description='Rota para deletar todos os tickets')
+async def tickets_delete():
+    delete = await delete_tickets()
 
     if delete is None:
         raise HTTPException(status_code=404, detail="Tickets not delete")
 
     return {"message": "Tickets deletados com sucesso"}
+
+
+# Rota que deleta todos os tickets da tabela de tickets
+@cae_router.delete("/students-delete", description='Rota para deletar todos os estudantes')
+async def students_delete():
+    delete = await delete_students()
+
+    if delete is None:
+        raise HTTPException(status_code=404, detail="Students not delete")
+
+    return {"message": "Estudantes deletados com sucesso"}
 
 
 # Rota que retorna todas as autorizações permanentes não aprovadas
@@ -88,8 +111,8 @@ async def update_not_authorized(authorization_status: int, listPermanents: Stude
         await patch_authorized_permanent(permanentTicket.idStudent, {'authorized': authorization_status})
 
 
-# Rota para inserir novas turmas
-@cae_router.post("/new-classes")
+# Rota para inserir novas turmas do MÉDIO
+@cae_router.post("/new-classes", description="Rota para adicionar novas turmas do MÉDIO")
 async def add_new_classes(classes: List[dict]):
     print(classes)
     results = []
