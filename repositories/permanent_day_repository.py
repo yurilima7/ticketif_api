@@ -75,7 +75,14 @@ async def patch_authorized(authorized_id: int, updated_fields: dict):
 
 
 # Função responsável por aprovar ou desaprovar a autorização dos permanentes
-async def patch_authorized_permanent(student_id: int, updated_fields: dict):
-    query = permanent.update().where(permanent.c.student_id == student_id and permanent.c.authorized == 0)\
+async def patch_authorized_permanent(student_id: int, updated_fields: dict, meal_id: int):
+    query = permanent.update()\
+        .where(
+            (permanent.c.student_id == student_id) & 
+            (permanent.c.authorized == 0) & 
+            (permanent.c.meal_id == meal_id)
+        )\
         .values(**updated_fields)
+
     return await db_ticket.execute(query)
+ 
