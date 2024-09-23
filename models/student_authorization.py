@@ -7,6 +7,7 @@ class StudentAuthorization(BaseModel):
     matricula: str
     idStudent: int
     text: str
+    meal_id: int
     meal: str
     days: str
 

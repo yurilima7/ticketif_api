@@ -108,7 +108,7 @@ async def permanents_not_authorized():
 @cae_router.patch("/not-authorized/{authorization_status}")
 async def update_not_authorized(authorization_status: int, listPermanents: StudentPermanentAuthorization):
     for permanentTicket in listPermanents.authorizations:
-        await patch_authorized_permanent(permanentTicket.idStudent, {'authorized': authorization_status}, permanentTicket.mealId)
+        await patch_authorized_permanent(permanentTicket.idStudent, {'authorized': authorization_status}, permanentTicket.meal_id)
 
 
 # Rota para inserir novas turmas do MÉDIO
