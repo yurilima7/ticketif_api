@@ -114,7 +114,6 @@ async def update_not_authorized(authorization_status: int, listPermanents: Stude
 # Rota para inserir novas turmas do MÉDIO
 @cae_router.post("/new-classes", description="Rota para adicionar novas turmas do MÉDIO")
 async def add_new_classes(classes: List[dict]):
-    print(classes)
     results = []
     for classe in classes:
         result = await insert_class(description=classe["description"], course=classe["course"])
