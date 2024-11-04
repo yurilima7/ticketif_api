@@ -293,7 +293,6 @@ async def checks_permanent_authorization(student_id: int):
         
         # se em análise sem aprovados presente
         elif day_ticket[11] == 1 and day_ticket[4] == 1 and len(all_rejected) > 0:
-            await patch_ticket(ticket_id=day_ticket[0], updated_fields={"status_id": 6})
             await patch_all_rejected(all_rejected=all_rejected)
 
         # se não foi autorizado

@@ -52,3 +52,6 @@ $RECYCLE.BIN/
 venv
 *.db
 *.pyc
+
+
+__pycache__/
